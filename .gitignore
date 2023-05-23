@@ -1,0 +1,11 @@
+*.env
+*.idea
+*.DS_Store
+**/__pycache__
+**/*.pyc
+*.egg-info
+*.pyc
+.idea
+.idea/workspace.xml
+.ipynb_checkpoints
+mlruns/
