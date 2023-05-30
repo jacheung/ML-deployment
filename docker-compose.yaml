@@ -6,15 +6,24 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
     ports:
-      - 5432:5432
-      
-  python:
-    image: app
-    depends_on:
-      - optuna-postgres
-    environment: 
-      - POSTGRES_DB=optunadb
+      - "5432:5432"
+  mlflow-postgres:
+    image: postgres
+    environment:
+      - POSTGRES_DB=mlflowdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
-      - POSTGRES_HOSTNAME=optuna-postgres
-
+    ports:
+      - "5433:5432"
+  optuna-hp-tuning-app:
+    build: ./app/
+    depends_on:
+      - optuna-postgres
+      - mlflow-postgres
+    environment: 
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_OPTUNA_DB=optunadb
+      - POSTGRES_OPTUNA_HOSTNAME=optuna-postgres
+      - POSTGRES_MLFLOW_DB=mlflowdb
+      - POSTGRES_MLFLOW_HOSTNAME=mlflow-postgres
