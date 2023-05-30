@@ -6,16 +6,15 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
     ports:
-      - '5432:5432'
+      - 5432:5432
       
   python:
-    build: .
-    command: 
-      - python mnist-optuna-kubernetes.py
+    image: app
     depends_on:
       - optuna-postgres
     environment: 
       - POSTGRES_DB=optunadb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_HOSTNAME=optuna-postgres
 
