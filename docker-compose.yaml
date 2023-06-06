@@ -25,5 +25,4 @@ services:
       - POSTGRES_PASSWORD=mysecretpassword
       - POSTGRES_OPTUNA_DB=optunadb
       - POSTGRES_OPTUNA_HOSTNAME=optuna-postgres
-      - POSTGRES_MLFLOW_DB=mlflowdb
-      - POSTGRES_MLFLOW_HOSTNAME=mlflow-postgres
+      - MLFLOW_TRACKING_URI=postgresql+psycopg2://postgres:mysecretpassword@mlflow-postgres:5432/mlflowdb

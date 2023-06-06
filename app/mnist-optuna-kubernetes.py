@@ -150,8 +150,7 @@ if __name__ == "__main__":
         study = optuna.load_study(
             study_name=optuna_study_name,
             storage=optuna_storage_url,
-        )
-        
+        )  
     except KeyError:
         print('no study found. building from scratch...')
         study = optuna.create_study(
@@ -162,20 +161,13 @@ if __name__ == "__main__":
 
 
     # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
-    mlflow_storage_url="postgresql://{}:{}@{}:5433/{}".format(
-            os.environ["POSTGRES_USER"],
-            os.environ["POSTGRES_PASSWORD"],
-            os.environ["POSTGRES_MLFLOW_HOSTNAME"],
-            os.environ["POSTGRES_MLFLOW_DB"]
-        )
-    mlflow.set_tracking_uri(mlflow_storage_url)
     experiment_id = set_mlflow_experiment(experiment_name=optuna_study_name)
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # a new experiment name will be created in MLFlow using the Optuna study name
     study.optimize(objective,
                 n_trials=8,
-                n_jobs=2,
+                n_jobs=1,
                 callbacks=[MLflowCallback(metric_name="val_accuracy",
                                             create_experiment=False,
                                             mlflow_kwargs=mlflow_kwargs)]
