@@ -3,4 +3,4 @@ WORKDIR /app
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["python", "mnist-optuna-kubernetes.py"]
+CMD ["python", "train-pipeline.py"]

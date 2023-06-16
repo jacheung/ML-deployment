@@ -12,7 +12,7 @@ from optuna.integration.mlflow import MLflowCallback
 def load_tensorflow_dataset(dataset_str: str):
     (xy_train, xy_test), ds_info = tfds.load(
         dataset_str,
-        split=['train', 'test'], shuffle_files=True,
+        shuffle_files=True,
         as_supervised=True,
         with_info=True,
     )
@@ -35,7 +35,8 @@ def preprocess_mnist_tfds(image, label=None):
 
 
 class MNIST(mlflow.pyfunc.PythonModel):     
-    def fit(self, xy_tuple_train, xy_tuple_test, hyperparameters):
+    @staticmethod
+    def _build(self, hyperparameters):
         ## Build model
         # class names for mnist hardcoded
         class_names = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -68,16 +69,29 @@ class MNIST(mlflow.pyfunc.PythonModel):
                             loss=tf.keras.losses.SparseCategoricalCrossentropy(
                             from_logits=False),
                             metrics=['accuracy'])
-                      
-        ## Fit model
-        # fit model and save history to model store
-        self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'], validation_data=xy_tuple_test)
+        
+        # base model logging
         self._model_base = base_model
+
+    def fit_hp_tuning(self, xy_tuple_train, xy_tuple_test, hyperparameters):                      
+        self._build(hyperparameters)
+        # fit model using train/test split to find hyperparams
+        self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'], validation_data=xy_tuple_test)
+    
+    def fit_production(self, xy_tuple_train, hyperparameters):                      
+        self._build(hyperparameters)
+        # fit model using all the data 
+        self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'])
         
     def predict(self, context, model_input: np.ndarray) -> np.ndarray:
         image, _ = preprocess_mnist_tfds(model_input)
         image = tf.reshape(image, [1, 224, 224, 3])
         return self._model.predict(image).argmax()
+    
+    def load_from_mlflow(self, model_name):
+        results = mlflow.search_registered_models(filter_string='name = "mnist-classification"')
+        latest_model_details = results[0].latest_versions[0]
+        model = mlflow.pyfunc.load_model(model_uri=f'{latest_model_details.source[7:]}')
 
 
 # mlflow Tracking requires definition of experiment name AND logged params
@@ -100,75 +114,37 @@ def set_mlflow_experiment(experiment_name:str):
     return experiment_id
 
 
-
-# hyperparameters search using Optuna
-# can scale Optuna with Kubernetes https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html
-def objective(trial): 
-    """
-    Optuna objective function for tuning transfer learning model
-    """
-    hyperparams = {
-        'learning_rate': trial.suggest_float('learning_rate', 0.00001, 0.1, log=True),
-        'l1': trial.suggest_float('l1', 0.0, 0.05),
-        'l2': trial.suggest_float('l2', 0.0, 0.05),
-        'num_hidden': trial.suggest_int('num_hidden', 8, 64),
-        'epochs': trial.suggest_int('epochs', 1, 3)
-    }
-
-    model.fit(ds_train, ds_test, hyperparams)
-    training_history = model._train_history.history
-    validation_accuracy = training_history['val_accuracy'][-1]
-    return validation_accuracy
-
-
-
-
 if __name__ == "__main__":
+    # args to parse
+    train = True
+    mlflow_experiment_name = "mnist-hyperparam-optuna-docker"
+    
     # preprocess and define batch sizes for tensorflow 
-    ds_train, ds_test = load_tensorflow_dataset('mnist')
+    ds_train = load_tensorflow_dataset('mnist')
     ds_train = ds_train.map(preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
     ds_train = ds_train.batch(128)
-    ds_test = ds_test.map(preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_test = ds_test.batch(128) 
 
     # instantiate model
     model = MNIST()
 
-    # define optuna variables
-    optuna_study_name = "mnist-hyperparam-optuna-docker"
-    optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
-                os.environ["POSTGRES_USER"],
-                os.environ["POSTGRES_PASSWORD"],
-                os.environ["POSTGRES_OPTUNA_HOSTNAME"],
-                os.environ["POSTGRES_OPTUNA_DB"]
-            )
-    print(optuna_storage_url)
-
-    # create or load optuna study
-    try:
-        print('loading study...')
-        study = optuna.load_study(
-            study_name=optuna_study_name,
-            storage=optuna_storage_url,
-        )  
-    except KeyError:
-        print('no study found. building from scratch...')
-        study = optuna.create_study(
-            study_name=optuna_study_name,
-            storage=optuna_storage_url,
-            pruner=optuna.pruners.HyperbandPruner(),
-            direction='maximize')
-
-
     # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
-    experiment_id = set_mlflow_experiment(experiment_name=optuna_study_name)
-    mlflow_kwargs = {'experiment_id': experiment_id}
+    experiment_id = set_mlflow_experiment(experiment_name=mlflow_experiment_name)
+    
+    # train model using params or load if model is registered? CREATE ARG FOR THIS
+    if train is True:
+        # load params 
+        hyperparams = 1 # load from mlflow experiment
+        model.fit(ds_train, ds_test, hyperparams)
+        # register model
+        model_name = f'{experiment.name}'
+        # mlflow.tensorflow.log_model
+        mv = mlflow.register_model(model_uri=f"runs:/{best_run_id}/",
+                                   name=model_name)
+    else:
+        model.load_mlflow()
 
-    # a new experiment name will be created in MLFlow using the Optuna study name
-    study.optimize(objective,
-                n_trials=8,
-                n_jobs=1,
-                callbacks=[MLflowCallback(metric_name="val_accuracy",
-                                            create_experiment=False,
-                                            mlflow_kwargs=mlflow_kwargs)]
-                )
+
+    # infer model
+
+
+    
