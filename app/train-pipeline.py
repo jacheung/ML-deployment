@@ -32,22 +32,8 @@ def objective(trial):
 
 
 if __name__ == "__main__":
-    # preprocess and define batch sizes for tensorflow 
-    ds_train, ds_test = load.load_tensorflow_dataset('mnist')
-    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_train = ds_train.batch(128)
-    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_test = ds_test.batch(128) 
-
-
-    # define optuna variables
-    optuna_study_name = "mnist-hyperparam-optuna-docker"
-    # optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
-    #             os.environ["POSTGRES_USER"],
-    #             os.environ["POSTGRES_PASSWORD"],
-    #             os.environ["POSTGRES_OPTUNA_HOSTNAME"],
-    #             os.environ["POSTGRES_OPTUNA_DB"]
-    #         )
+    # arg parser for local
+    os.environ["MLFLOW_TRACKING_URI"] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb"
     POSTGRES_DB="optunadb"
     POSTGRES_USER="postgres"
     POSTGRES_PASSWORD="mysecretpassword"
@@ -58,6 +44,23 @@ if __name__ == "__main__":
             POSTGRES_HOSTNAME,
             POSTGRES_DB
             )
+    
+    # preprocess and define batch sizes for tensorflow 
+    ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
+    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_train = ds_train.batch(128)
+    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_test = ds_test.batch(128) 
+
+
+    # define optuna variables
+    optuna_study_name = "mnist-hyperparam-optuna-local"
+    # optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
+    #             os.environ["POSTGRES_USER"],
+    #             os.environ["POSTGRES_PASSWORD"],
+    #             os.environ["POSTGRES_OPTUNA_HOSTNAME"],
+    #             os.environ["POSTGRES_OPTUNA_DB"]
+    #         )
 
     # create or load optuna study
     try:
@@ -76,13 +79,12 @@ if __name__ == "__main__":
 
 
     # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
-    os.environ["MLFLOW_TRACKING_URI"] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5432/mlflowdb"
     experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # a new experiment name will be created in MLFlow using the Optuna study name
     study.optimize(objective,
-                n_trials=2,
+                n_trials=4,
                 n_jobs=2,
                 callbacks=[MLflowCallback(metric_name="val_accuracy",
                                             create_experiment=False,

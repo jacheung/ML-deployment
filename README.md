@@ -29,3 +29,8 @@ kubectl get pods -n kubeflow
 #### Load Katib UI 
 kubectl port-forward svc/katib-ui -n kubeflow 8080:80
 ```
+
+```
+psql -h localhost -p 5435 -d mlflowdb -U postgres SELECT * FROM alembic_version;  
+DROP TABLE alembic_version;
+``` 

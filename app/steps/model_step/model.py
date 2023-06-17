@@ -60,12 +60,12 @@ class MNIST(mlflow.pyfunc.PythonModel):
         self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'])
         
     def load(self):
-        try:
-            latest = str(max([int(x) for x in os.listdir(self._model_path)]))
-            self._model = tf.keras.models.load_model(f'{self._model_path}/{latest}')
-        except FileNotFoundError:
-            print('No models found.')
-            self._model = None
+        # try:
+        #     latest = str(max([int(x) for x in os.listdir(self._model_path)]))
+        #     self._model = tf.keras.models.load_model(f'{self._model_path}/{latest}')
+        # except FileNotFoundError:
+        print('No models found.')
+        self._model = None
         return self
     
     def predict(self, context, model_input: np.ndarray) -> np.ndarray:

@@ -14,16 +14,33 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
     ports:
-      - "5433:5432"
-  optuna-hp-tuning-app:
-    build: ./app/
-    depends_on:
-      - optuna-postgres
-      - mlflow-postgres
-    environment: 
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=mysecretpassword
-      - POSTGRES_OPTUNA_DB=optunadb
-      - POSTGRES_OPTUNA_HOSTNAME=optuna-postgres
-      - MLFLOW_TRACKING_URI=postgresql+psycopg2://postgres:mysecretpassword@mlflow-postgres:5432/mlflowdb
+      - "5435:5432"
+  mlflow-object-store:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      - MINIO_ROOT_USER=jacheung
+      - MINIO_ROOT_PASSWORD=mysecretpassword
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - minio-data:/data
+
+volumes:
+  minio-data:
+    driver: local
+
+
+# optuna-hp-tuning-app:
+#   build: ./app/
+#   depends_on:
+#     - optuna-postgres
+#     - mlflow-postgres
+#   environment: 
+#     - POSTGRES_USER=postgres
+#     - POSTGRES_PASSWORD=mysecretpassword
+#     - POSTGRES_OPTUNA_DB=optunadb
+#     - POSTGRES_OPTUNA_HOSTNAME=optuna-postgres
+#     - MLFLOW_TRACKING_URI=postgresql+psycopg2://postgres:mysecretpassword@mlflow-postgres:5433/mlflowdb
       
