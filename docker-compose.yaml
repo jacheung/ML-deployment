@@ -15,22 +15,29 @@ services:
       - POSTGRES_PASSWORD=mysecretpassword
     ports:
       - "5435:5432"
-  mlflow-object-store:
+  minio:
     image: minio/minio:latest
-    command: server /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
     environment:
       - MINIO_ROOT_USER=jacheung
       - MINIO_ROOT_PASSWORD=mysecretpassword
-    ports:
-      - 9000:9000
-      - 9001:9001
-    volumes:
-      - minio-data:/data
-
+    command: server --console-address ":9001" /data
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 jacheung mysecretpassword;
+      /usr/bin/mc mb myminio/mlflow;
+      exit 0;
+      "
 volumes:
-  minio-data:
-    driver: local
-
+  minio_data:
 
 # optuna-hp-tuning-app:
 #   build: ./app/

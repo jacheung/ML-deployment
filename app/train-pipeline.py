@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 import optuna
 from optuna.integration.mlflow import MLflowCallback
+import argparse
 # Project Imports
 from steps.load_step import load
 from steps.preprocess_step import preprocess
@@ -33,17 +34,15 @@ def objective(trial):
 
 if __name__ == "__main__":
     # arg parser for local
-    os.environ["MLFLOW_TRACKING_URI"] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb"
-    POSTGRES_DB="optunadb"
-    POSTGRES_USER="postgres"
-    POSTGRES_PASSWORD="mysecretpassword"
-    POSTGRES_HOSTNAME="localhost"
-    optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
-            POSTGRES_USER,
-            POSTGRES_PASSWORD,
-            POSTGRES_HOSTNAME,
-            POSTGRES_DB
-            )
+    os.environ['MLFLOW_TRACKING_URI'] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb"
+    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://127.0.0.1:9000"
+    os.environ['AWS_ACCESS_KEY_ID'] = 'jacheung'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = "mysecretpassword"
+    os.environ["POSTGRES_USER"] = 'postgres'
+    os.environ["POSTGRES_PASSWORD"] = 'mysecretpassword'
+    os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'
+    os.environ["POSTGRES_OPTUNA_DB"] = 'optunadb'
+    optuna_study_name = "mnist-hyperparam-local-v2"
     
     # preprocess and define batch sizes for tensorflow 
     ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
@@ -54,13 +53,12 @@ if __name__ == "__main__":
 
 
     # define optuna variables
-    optuna_study_name = "mnist-hyperparam-optuna-local"
-    # optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
-    #             os.environ["POSTGRES_USER"],
-    #             os.environ["POSTGRES_PASSWORD"],
-    #             os.environ["POSTGRES_OPTUNA_HOSTNAME"],
-    #             os.environ["POSTGRES_OPTUNA_DB"]
-    #         )
+    optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
+                os.environ["POSTGRES_USER"],
+                os.environ["POSTGRES_PASSWORD"],
+                os.environ["POSTGRES_OPTUNA_HOSTNAME"],
+                os.environ["POSTGRES_OPTUNA_DB"]
+            )
 
     # create or load optuna study
     try:
@@ -79,7 +77,8 @@ if __name__ == "__main__":
 
 
     # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
-    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
+    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name,
+                                                artifact_location='s3://mlflow')
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # a new experiment name will be created in MLFlow using the Optuna study name

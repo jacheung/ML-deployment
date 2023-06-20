@@ -2,11 +2,12 @@ import mlflow
 
 # mlflow Tracking requires definition of experiment name AND logged params
 # Experiment names they should be defined as "project-task-version"
-def set_mlflow_experiment(experiment_name:str):
+def set_mlflow_experiment(experiment_name:str, artifact_location: str = None):
     try:
-        experiment_id = mlflow.create_experiment(experiment_name)
-    # except mlflow.exceptions.MlflowException as e: 
-    #     if str(e) == f"Experiment '{experiment_name}' already exists.":
+        experiment_id = mlflow.create_experiment(experiment_name, 
+                                                 artifact_location=artifact_location)
+    # except mlflow.exceptions.MlflowException as e:
+    #   if str(e) == f"Experiment '{experiment_name}' already exists.":
     except:
         print(f'Experiment already exists, setting experiment to {experiment_name}')
         experiment_info = mlflow.set_experiment(experiment_name)
