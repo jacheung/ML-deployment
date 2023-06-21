@@ -35,14 +35,14 @@ def objective(trial):
 if __name__ == "__main__":
     # arg parser for local
     os.environ['MLFLOW_TRACKING_URI'] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb"
-    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://127.0.0.1:9000"
-    os.environ['AWS_ACCESS_KEY_ID'] = 'jacheung'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = "mysecretpassword"
+    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9001"
+    os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
     os.environ["POSTGRES_USER"] = 'postgres'
     os.environ["POSTGRES_PASSWORD"] = 'mysecretpassword'
     os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'
     os.environ["POSTGRES_OPTUNA_DB"] = 'optunadb'
-    optuna_study_name = "mnist-hyperparam-local-v2"
+    optuna_study_name = "mnist-hyperparam-local-v4"
     
     # preprocess and define batch sizes for tensorflow 
     ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')

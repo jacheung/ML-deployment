@@ -23,8 +23,8 @@ services:
     volumes:
       - minio_data:/data
     environment:
-      - MINIO_ROOT_USER=jacheung
-      - MINIO_ROOT_PASSWORD=mysecretpassword
+      - MINIO_ROOT_USER=minio_user
+      - MINIO_ROOT_PASSWORD=minio_pass
     command: server --console-address ":9001" /data
   createbuckets:
     image: minio/mc
@@ -32,7 +32,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 jacheung mysecretpassword;
+      /usr/bin/mc alias set myminio http://minio:9000 minio_user minio_pass;
       /usr/bin/mc mb myminio/mlflow;
       exit 0;
       "
