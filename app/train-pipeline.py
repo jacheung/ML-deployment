@@ -42,7 +42,7 @@ if __name__ == "__main__":
     os.environ["POSTGRES_PASSWORD"] = 'mysecretpassword'
     os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'
     os.environ["POSTGRES_OPTUNA_DB"] = 'optunadb'
-    optuna_study_name = "mnist-hyperparam-local-v4"
+    optuna_study_name = "mnist-hyperparam-local"
     
     # preprocess and define batch sizes for tensorflow 
     ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
 
     # define optuna variables
-    optuna_storage_url="postgresql://{}:{}@{}:5432/{}".format(
+    optuna_storage_url="postgresql://{}:{}@{}:5435/{}".format(
                 os.environ["POSTGRES_USER"],
                 os.environ["POSTGRES_PASSWORD"],
                 os.environ["POSTGRES_OPTUNA_HOSTNAME"],
@@ -83,9 +83,9 @@ if __name__ == "__main__":
 
     # a new experiment name will be created in MLFlow using the Optuna study name
     study.optimize(objective,
-                n_trials=4,
-                n_jobs=2,
-                callbacks=[MLflowCallback(metric_name="val_accuracy",
-                                            create_experiment=False,
-                                            mlflow_kwargs=mlflow_kwargs)]
-                )
+                   n_trials=4,
+                   n_jobs=2,
+                   callbacks=[MLflowCallback(metric_name="val_accuracy",
+                                             create_experiment=False,
+                                             mlflow_kwargs=mlflow_kwargs)]
+                    )
