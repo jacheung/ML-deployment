@@ -7,6 +7,7 @@ Docker build
 ```
 docker-compose build --no-cache
 docker-compose up
+docker-compose up --remove-orphans --force-recreate -d
 ```
 
 #### Start MLFlow UI connected to Minio and Postgres 
@@ -14,8 +15,8 @@ docker-compose up
 export AWS_ACCESS_KEY_ID='minio_user'
 export AWS_SECRET_ACCESS_KEY='minio_pass'
 export MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
-mlflow server --backend-store-uri postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb \
---port 5435 
+mlflow server --backend-store-uri postgresql+psycopg2://postgres:postgres_pw@localhost:5432/mlflowdb \
+--port 5432
 ```
 
 

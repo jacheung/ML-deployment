@@ -3,51 +3,64 @@ services:
     image: postgres
     environment:
       - POSTGRES_DB=optunadb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    volumes:
+      - optunadata:/var/lib/postgresql/optuna 
   mlflow-postgres:
     image: postgres
     environment:
       - POSTGRES_DB=mlflowdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    expose:
+      - "5432" # Publishes 5432 to other containers but NOT to host machine
     ports:
-      - "5435:5432"
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/mlflow
   minio:
     image: minio/minio:latest
+    environment:
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - minio_data:/data
-    environment:
-      - MINIO_ROOT_USER=minio_user
-      - MINIO_ROOT_PASSWORD=minio_pass
-    command: server --console-address ":9001" /data
-  createbuckets:
+    command: server /data --console-address ':9001' --address ':9000'
+  create-mlflow-bucket:
     image: minio/mc
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 minio_user minio_pass;
+      /usr/bin/mc alias set myminio http://minio:9000 ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY};
       /usr/bin/mc mb myminio/mlflow;
       exit 0;
       "
+  mlflow-server:
+    container_name: mlflow-server
+    image: mlflow-server
+    restart: always
+    build: 
+      context: ./mlflow
+      dockerfile: Dockerfile
+    depends_on:
+        - create-mlflow-bucket
+        - mlflow-postgres
+    ports:
+        - "5000:5000"
+    environment:
+        - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    command: mlflow server --backend-store-uri postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@mlflow-postgres:5432/mlflowdb --default-artifact-root s3://mlflow/ --host 0.0.0.0
+
 volumes:
   minio_data:
-
-# optuna-hp-tuning-app:
-#   build: ./app/
-#   depends_on:
-#     - optuna-postgres
-#     - mlflow-postgres
-#   environment: 
-#     - POSTGRES_USER=postgres
-#     - POSTGRES_PASSWORD=mysecretpassword
-#     - POSTGRES_OPTUNA_DB=optunadb
-#     - POSTGRES_OPTUNA_HOSTNAME=optuna-postgres
-#     - MLFLOW_TRACKING_URI=postgresql+psycopg2://postgres:mysecretpassword@mlflow-postgres:5433/mlflowdb
-      
+  dbdata:
+  optunadata:

@@ -49,15 +49,18 @@ class MNIST(mlflow.pyfunc.PythonModel):
         # base model logging
         self._model_base = base_model
 
-    def fit_hp_search(self, xy_tuple_train, xy_tuple_test, hyperparameters):                      
+    def fit_hp_search(self, xy_train, xy_test, hyperparameters):                      
         self._build(self, hyperparameters)
         # fit model using train/test split to find hyperparams
-        self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'], validation_data=xy_tuple_test)
+        self._train_history = self._model.fit(xy_train,
+                                               epochs=hyperparameters['epochs'],
+                                               validation_data=xy_test)
     
-    def fit_production(self, xy_tuple_train, hyperparameters):                      
+    def fit_production(self, xy_train, hyperparameters):                      
         self._build(self, hyperparameters)
         # fit model using all the data 
-        self._train_history = self._model.fit(xy_tuple_train, epochs=hyperparameters['epochs'])
+        self._train_history = self._model.fit(xy_train,
+                                               epochs=hyperparameters['epochs'])
         
     def load(self):
         # try:
@@ -72,3 +75,8 @@ class MNIST(mlflow.pyfunc.PythonModel):
         image, _ = preprocess_mnist_tfds(model_input)
         image = tf.reshape(image, [1, 224, 224, 3])
         return self._model.predict(image).argmax()
+
+
+def get_model():
+    model = MNIST()
+    return model

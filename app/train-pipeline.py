@@ -1,8 +1,8 @@
 import os
+print(os.getcwd())
 import tensorflow as tf
 import optuna
 from optuna.integration.mlflow import MLflowCallback
-import argparse
 # Project Imports
 from steps.load_step import load
 from steps.preprocess_step import preprocess
@@ -24,7 +24,6 @@ def objective(trial):
         'epochs': trial.suggest_int('epochs', 1, 3)
     }
 
-    mnist_model = model.MNIST()
     mnist_model.fit_hp_search(ds_train, ds_test, hyperparams)
     training_history = mnist_model._train_history.history
     validation_accuracy = training_history['val_accuracy'][-1]
@@ -34,26 +33,19 @@ def objective(trial):
 
 if __name__ == "__main__":
     # arg parser for local
-    os.environ['MLFLOW_TRACKING_URI'] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5435/mlflowdb"
-    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9001"
-    os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
+    # os.environ['MLFLOW_TRACKING_URI'] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5432/mlflowdb"
+    # os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9000"
+    # os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
+    # os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
+    os.environ['MLFLOW_TRACKING_URI'] = "http://0.0.0.0:5000"
     os.environ["POSTGRES_USER"] = 'postgres'
-    os.environ["POSTGRES_PASSWORD"] = 'mysecretpassword'
+    os.environ["POSTGRES_PASSWORD"] = 'postgres_pw'
     os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'
     os.environ["POSTGRES_OPTUNA_DB"] = 'optunadb'
     optuna_study_name = "mnist-hyperparam-local"
     
-    # preprocess and define batch sizes for tensorflow 
-    ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
-    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_train = ds_train.batch(128)
-    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_test = ds_test.batch(128) 
-
-
     # define optuna variables
-    optuna_storage_url="postgresql://{}:{}@{}:5435/{}".format(
+    optuna_storage_url="postgresql://{}:{}@{}:5433/{}".format(
                 os.environ["POSTGRES_USER"],
                 os.environ["POSTGRES_PASSWORD"],
                 os.environ["POSTGRES_OPTUNA_HOSTNAME"],
@@ -75,15 +67,22 @@ if __name__ == "__main__":
             pruner=optuna.pruners.HyperbandPruner(),
             direction='maximize')
 
-
     # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
-    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name,
-                                                artifact_location='s3://mlflow')
+    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
     mlflow_kwargs = {'experiment_id': experiment_id}
 
+    # preprocess and define batch sizes for tensorflow 
+    ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
+    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_train = ds_train.batch(128)
+    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_test = ds_test.batch(128) 
+
+    mnist_model = model.MNIST()
+    
     # a new experiment name will be created in MLFlow using the Optuna study name
     study.optimize(objective,
-                   n_trials=4,
+                   n_trials=2,
                    n_jobs=2,
                    callbacks=[MLflowCallback(metric_name="val_accuracy",
                                              create_experiment=False,
