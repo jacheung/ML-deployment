@@ -1,9 +1,9 @@
 # production-ML-deployment
  This repository is part 2 of a series of templates for stepping up a POC deployment to one that is scalable in production. This part introduces:
  1. training/research pipeline and production pipelines  
- 2. two critical tools to complement the above pipelines: 
-    a. Optuna - parallelized hyperparameter search 
-    b. MLFlow - experiment tracking and model registry
+ 2. two critical tools to complement the above pipelines:  
+ &nbsp; a. Optuna - parallelized hyperparameter search  
+ &nbsp; b. MLFlow - experiment tracking and model registry
 
 ## 1. Training and Production pipelines
 
