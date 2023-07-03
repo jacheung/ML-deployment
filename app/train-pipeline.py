@@ -1,5 +1,4 @@
 import os
-print(os.getcwd())
 import tensorflow as tf
 import optuna
 from optuna.integration.mlflow import MLflowCallback
@@ -33,11 +32,13 @@ def objective(trial):
 
 if __name__ == "__main__":
     # arg parser for local
-    # os.environ['MLFLOW_TRACKING_URI'] = "postgresql+psycopg2://postgres:mysecretpassword@localhost:5432/mlflowdb"
-    # os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9000"
-    # os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
-    # os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
+    # mlflow tracking server
     os.environ['MLFLOW_TRACKING_URI'] = "http://0.0.0.0:5000"
+    # mlflow artifact/model store
+    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9000"
+    os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
+    # optuna hyperparam stores
     os.environ["POSTGRES_USER"] = 'postgres'
     os.environ["POSTGRES_PASSWORD"] = 'postgres_pw'
     os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'

@@ -7,9 +7,9 @@ from steps.preprocess_step.preprocess import preprocess_mnist_tfds
 
 
 class MNIST(mlflow.pyfunc.PythonModel): 
-    def __init__(self, model_path: str = None):
+    def __init__(self, mlflow_registered_model_name: str = None):
         self._model = None
-        self._model_path = model_path
+        self._mlflow_registered_model_name = mlflow_registered_model_name
         self.load()    
     @staticmethod
     def _build(self, hyperparameters):
@@ -63,14 +63,17 @@ class MNIST(mlflow.pyfunc.PythonModel):
                                                epochs=hyperparameters['epochs'])
         
     def load(self):
-        # try:
-        #     latest = str(max([int(x) for x in os.listdir(self._model_path)]))
-        #     self._model = tf.keras.models.load_model(f'{self._model_path}/{latest}')
-        # except FileNotFoundError:
-        print('No models found.')
-        self._model = None
-        return self
-    
+        try:
+            results = mlflow.search_registered_models(
+                filter_string=f'name = "{self._mlflow_registered_model_name}"')
+            latest_model_details = results[0].latest_versions[0]
+            self._model = mlflow.pyfunc.load_model(
+                model_uri=f'{latest_model_details.source}')
+        except FileNotFoundError:
+            print('No models found.')
+            self._model = None
+            return self
+        
     def predict(self, context, model_input: np.ndarray) -> np.ndarray:
         image, _ = preprocess_mnist_tfds(model_input)
         image = tf.reshape(image, [1, 224, 224, 3])

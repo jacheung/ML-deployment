@@ -76,6 +76,10 @@ if __name__ == "__main__":
         mlflow.pyfunc.log_model(python_model=mnist_model,
                                 artifact_path="")
 
+        # Dump model into model registry
+        mv = mlflow.register_model(model_uri=f"runs:/{run.info.run_id}/",
+                                name=optuna_study_name)
+
         # Close out MLFlow run to prevent any log contamination.
         mlflow.end_run(status='FINISHED') 
 
