@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from PIL import Image
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
 from steps.model_step.model import MNIST
 
@@ -12,18 +12,6 @@ os.environ['MLFLOW_TRACKING_URI'] = "http://0.0.0.0:5000"
 os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9000"
 os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
 os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
-
-
-# class PredictRequest(BaseModel):
-#     data: int
-#
-#     @validator("data")
-#     def check_dimensionality(cls, v):
-#         for point in v:
-#             if len(point) != n_features:
-#                 raise ValueError(f"Each data point must contain {n_features} features")
-#
-#         return v
 
 
 class PredictResponse(BaseModel):
@@ -42,7 +30,7 @@ async def predict(file: UploadFile = File(...)):
 
     # load model and predict
     model = MNIST(mlflow_registered_model_name='mnist-hyperparam-local')
-    y_pred = model.predict(context=None, model_input=image)  # empty context because mlflow required structure
+    y_pred = model.predict(context=None, model_input=image)
     result = PredictResponse(prediction=y_pred.tolist())
     print(y_pred)
 

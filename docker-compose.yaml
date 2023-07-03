@@ -2,7 +2,7 @@ services:
   optuna-postgres:
     image: postgres
     environment:
-      - POSTGRES_DB=optunadb
+      - POSTGRES_DB=${OPTUNA_DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
@@ -12,7 +12,7 @@ services:
   mlflow-postgres:
     image: postgres
     environment:
-      - POSTGRES_DB=mlflowdb
+      - POSTGRES_DB=${MLFLOW_DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     expose:
@@ -58,7 +58,7 @@ services:
         - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
         - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
         - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    command: mlflow server --backend-store-uri postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@mlflow-postgres:5432/mlflowdb --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    command: mlflow server --backend-store-uri postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@mlflow-postgres:5432/${MLFLOW_DB_NAME} --default-artifact-root s3://mlflow/ --host 0.0.0.0
 
 volumes:
   minio_data:

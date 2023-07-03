@@ -10,7 +10,6 @@ from steps import utils
 
 
 # hyperparameters search using Optuna
-# can scale Optuna with Kubernetes https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html
 def objective(trial): 
     """
     Optuna objective function for tuning transfer learning model
@@ -68,15 +67,18 @@ if __name__ == "__main__":
             pruner=optuna.pruners.HyperbandPruner(),
             direction='maximize')
 
-    # create or set an experiment for optuna. Each trial from Optuna is logged as one run in an MLFlow experiment.
+    # create or set an experiment for optuna. 
+    # each trial from Optuna is logged as one run in an MLFlow experiment.
     experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # preprocess and define batch sizes for tensorflow 
     ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
-    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, 
+                            num_parallel_calls=tf.data.AUTOTUNE)
     ds_train = ds_train.batch(128)
-    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, 
+                          num_parallel_calls=tf.data.AUTOTUNE)
     ds_test = ds_test.batch(128) 
 
     mnist_model = model.MNIST()

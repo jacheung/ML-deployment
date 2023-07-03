@@ -1,4 +1,3 @@
-from atexit import register
 import tensorflow as tf
 import optuna
 import os
@@ -30,7 +29,8 @@ if __name__ == "__main__":
 
     # preprocess and define batch sizes for tensorflow 
     ds_train = load.load_tensorflow_dataset_production('mnist')
-    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, 
+                            num_parallel_calls=tf.data.AUTOTUNE)
     ds_train = ds_train.batch(128)
 
     # instantiate model
