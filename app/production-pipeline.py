@@ -1,3 +1,4 @@
+from atexit import register
 import tensorflow as tf
 import optuna
 import os
@@ -73,12 +74,10 @@ if __name__ == "__main__":
 
         # MLFlow tracking artifact (e.g. model file)
         # this will log the model and all its details under run_id/artifacts
+        # ths will also register the model so it can be served
         mlflow.pyfunc.log_model(python_model=mnist_model,
-                                artifact_path="")
-
-        # Dump model into model registry
-        mv = mlflow.register_model(model_uri=f"runs:/{run.info.run_id}/",
-                                name=optuna_study_name)
+                                artifact_path="",
+                                registered_model_name=optuna_study_name)
 
         # Close out MLFlow run to prevent any log contamination.
         mlflow.end_run(status='FINISHED') 
