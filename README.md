@@ -25,3 +25,5 @@ Our local MLflow server will be built via Docker. For it's architecture, it is c
 docker-compose build --no-cache
 docker-compose up --remove-orphans --force-recreate -d
 ```
+
+ curl -F "file=@/Users/jcheung/Documents/GitHub/thin-ML-deployment/app/ml/test_images/test_55_0.jpg" http://127.0.0.1:8000/predict

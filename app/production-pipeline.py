@@ -4,27 +4,17 @@ import os
 import mlflow
 import pandas as pd
 import time
+from dotenv import load_dotenv
 # Project Imports
 from steps.load_step import load
 from steps.preprocess_step import preprocess
 from steps.model_step import model
 from steps import utils
 
-
+load_dotenv()
 
 if __name__ == "__main__":
     # arg parser for local
-    # mlflow tracking server
-    os.environ['MLFLOW_TRACKING_URI'] = "http://0.0.0.0:5000"
-    # mlflow artifact/model store
-    os.environ['MLFLOW_S3_ENDPOINT_URL'] = "http://localhost:9000"
-    os.environ['AWS_ACCESS_KEY_ID'] = 'minio_user'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = "minio_pass"
-    # optuna hyperparam stores
-    os.environ["POSTGRES_USER"] = 'postgres'
-    os.environ["POSTGRES_PASSWORD"] = 'postgres_pw'
-    os.environ["POSTGRES_OPTUNA_HOSTNAME"] = 'localhost'
-    os.environ["POSTGRES_OPTUNA_DB"] = 'optunadb'
     optuna_study_name = "mnist-hyperparam-local"
 
     # preprocess and define batch sizes for tensorflow 
@@ -40,10 +30,9 @@ if __name__ == "__main__":
     experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
     
     # load params from optuna
-    optuna_storage_url="postgresql://{}:{}@{}:5433/{}".format(
+    optuna_storage_url="postgresql://{}:{}@localhost:5433/{}".format(
                 os.environ["POSTGRES_USER"],
                 os.environ["POSTGRES_PASSWORD"],
-                os.environ["POSTGRES_OPTUNA_HOSTNAME"],
                 os.environ["POSTGRES_OPTUNA_DB"]
             )
     print('loading study...')
