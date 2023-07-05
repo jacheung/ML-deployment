@@ -36,9 +36,9 @@ if __name__ == "__main__":
     
     # load params from optuna
     optuna_storage_url="postgresql://{}:{}@localhost:5433/{}".format(
-                os.environ["POSTGRES_USER"],
-                os.environ["POSTGRES_PASSWORD"],
-                os.environ["POSTGRES_OPTUNA_DB"]
+                os.environ["DB_USER"],
+                os.environ["DB_PASSWORD"],
+                os.environ["OPTUNA_DB_NAME"]
             )
     print('loading study...')
     study = optuna.load_study(

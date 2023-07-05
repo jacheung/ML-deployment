@@ -17,7 +17,7 @@ Optuna is a library for parallelized Bayesian hyperparameter search. To dive a b
 1. Parallelized - Optuna can be easily configured with a central database to log which hyperparameters are currently being tested and parallelize searches over multiple threads or processes. 
 2. Bayesian - With each completed hyperparameter step Optuna dynamically changes where in the search space to test, spending more steps in spaces yielding higher evaluation scores. 
 
-This tools is useful when working on a local machine. Further Optuna can be modified to run on top of Kubernetes as well. 
+This is useful for parallelizing search on a local machine and it can be further modified to run on top of Kubernetes. However in the future, we'll be leaning on Katib for scaling.  
 
 See more [here](https://optuna.org/)
 
@@ -28,7 +28,7 @@ Our local MLflow server will be built via Docker. For its architecture, it is co
 
 ## Usage
 This usage will comprise of 4 steps: 
-1. Starting MLflow server and Optuna Postgres
+1. Start MLflow server and Optuna Postgres (if your team has an MLflow server, feel free to connect to it using the .env variables)
 2. Run a training pipeline
 3. Run production pipeline
 4. Deploy the latest model for inference

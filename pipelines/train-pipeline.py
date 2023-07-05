@@ -22,7 +22,7 @@ def objective(trial):
         'l1': trial.suggest_float('l1', 0.0, 0.05),
         'l2': trial.suggest_float('l2', 0.0, 0.05),
         'num_hidden': trial.suggest_int('num_hidden', 8, 64),
-        'epochs': trial.suggest_int('epochs', 1, 3)
+        'epochs': trial.suggest_int('epochs', 3, 10)
     }
 
     mnist_model.fit_hp_search(ds_train, ds_test, hyperparams)
