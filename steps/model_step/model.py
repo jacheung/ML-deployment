@@ -69,6 +69,7 @@ class MNIST(mlflow.pyfunc.PythonModel):
             latest_model_details = results[0].latest_versions[0]
             self._model = mlflow.pyfunc.load_model(
                 model_uri=f'{latest_model_details.source}')
+            print(f'Successfully loaded model from {latest_model_details.source}')
         except IndexError:
             print('No models found.')
             self._model = None

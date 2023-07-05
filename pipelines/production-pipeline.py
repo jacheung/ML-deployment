@@ -2,8 +2,8 @@ import tensorflow as tf
 import optuna
 import os
 import mlflow
-import pandas as pd
 import time
+import argparse
 from dotenv import load_dotenv
 # Project Imports
 from steps.load_step import load
@@ -14,8 +14,13 @@ from steps import utils
 load_dotenv()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='training-pipeline')
+    parser.add_argument('--experiment-name', type=str,
+                        help='Define the experiment name for MLflow and Optuna.\
+                            This should be the same input as the training pipeline')
+    args = parser.parse_args()
     # arg parser for local
-    optuna_study_name = "mnist-hyperparam-local"
+    experiment_name = args.experiment_name
 
     # preprocess and define batch sizes for tensorflow 
     ds_train = load.load_tensorflow_dataset_production('mnist')
@@ -27,7 +32,7 @@ if __name__ == "__main__":
     mnist_model = model.MNIST()
 
     # mlflow experiment
-    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
+    experiment_id = utils.set_mlflow_experiment(experiment_name=experiment_name)
     
     # load params from optuna
     optuna_storage_url="postgresql://{}:{}@localhost:5433/{}".format(
@@ -37,13 +42,12 @@ if __name__ == "__main__":
             )
     print('loading study...')
     study = optuna.load_study(
-        study_name=optuna_study_name,
+        study_name=experiment_name,
         storage=optuna_storage_url,
     )  
     hyperparameters = study.best_params
 
     # train model and log via mlflow
-    current = pd.to_datetime('now')
     mlflow_run_name=f'production-{time.strftime("%Y%m%d-%H%M%S")}'
     with mlflow.start_run(experiment_id=experiment_id,  
                             run_name=mlflow_run_name) as run:
@@ -66,7 +70,7 @@ if __name__ == "__main__":
         # ths will also register the model so it can be served
         mlflow.pyfunc.log_model(python_model=mnist_model,
                                 artifact_path="",
-                                registered_model_name=optuna_study_name)
+                                registered_model_name=experiment_name)
 
         # Close out MLFlow run to prevent any log contamination.
         mlflow.end_run(status='FINISHED') 

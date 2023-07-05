@@ -3,6 +3,7 @@ import tensorflow as tf
 import optuna
 from optuna.integration.mlflow import MLflowCallback
 from dotenv import load_dotenv
+import argparse
 # Project Imports
 from steps.load_step import load
 from steps.preprocess_step import preprocess
@@ -31,8 +32,17 @@ def objective(trial):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='training-pipeline')
+    parser.add_argument('--experiment-name', type=str,
+                        help='Define the experiment name for MLflow and Optuna')
+    parser.add_argument('--num-trials', type=int, 
+                    help='Define the number of hyperparameters to search')
+    parser.add_argument('--num-jobs', type=int,
+                    help='Define the number of parallel jobs to run. Ideally set to half of CPUs available')
+    args = parser.parse_args()
+    
     # arg parser for local
-    optuna_study_name = "mnist-hyperparam-local"
+    experiment_name = args.experiment_name
     
     # define optuna variables
     optuna_storage_url="postgresql://{}:{}@localhost:5433/{}".format(
@@ -45,20 +55,20 @@ if __name__ == "__main__":
     try:
         print('loading study...')
         study = optuna.load_study(
-            study_name=optuna_study_name,
+            study_name=experiment_name,
             storage=optuna_storage_url,
         )  
     except KeyError:
         print('no study found. building from scratch...')
         study = optuna.create_study(
-            study_name=optuna_study_name,
+            study_name=experiment_name,
             storage=optuna_storage_url,
             pruner=optuna.pruners.HyperbandPruner(),
             direction='maximize')
 
     # create or set an experiment for optuna. 
     # each trial from Optuna is logged as one run in an MLFlow experiment.
-    experiment_id = utils.set_mlflow_experiment(experiment_name=optuna_study_name)
+    experiment_id = utils.set_mlflow_experiment(experiment_name=experiment_name)
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # preprocess and define batch sizes for tensorflow 
@@ -74,8 +84,8 @@ if __name__ == "__main__":
     
     # a new experiment name will be created in MLFlow using the Optuna study name
     study.optimize(objective,
-                   n_trials=2,
-                   n_jobs=2,
+                   n_trials=args.num_trials,
+                   n_jobs=args.num_jobs,
                    callbacks=[MLflowCallback(metric_name="val_accuracy",
                                              create_experiment=False,
                                              mlflow_kwargs=mlflow_kwargs)]
