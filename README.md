@@ -20,10 +20,60 @@ Our local MLflow server will be built via Docker. For it's architecture, it is c
 
 
 ## Usage
-#### Start MlFlow server via Docker
+This usage will comprise of 3 steps: 
+
+#### 1. Start MLFlow server and Optuna Postgres via Docker
+Clone this repository 
 ```
+gh repo clone jacheung/production-ML-deployment
+```
+Ensure you have docker installed. If not, click [here](https://docs.docker.com/engine/install/). Once you've done that, run the below to start the databases and MLFlow server. 
+
+```
+cd production-ML-deployment/backend
 docker-compose build --no-cache
 docker-compose up --remove-orphans --force-recreate -d
 ```
 
- curl -F "file=@/Users/jcheung/Documents/GitHub/thin-ML-deployment/app/ml/test_images/test_55_0.jpg" http://127.0.0.1:8000/predict
+You can access:
+Minio object storage via
+```
+http://localhost:9001/login
+```
+MLFlow UI via:
+```
+http://0.0.0.0:5000
+```
+
+#### 2. Run training pipeline 
+
+
+
+#### 3. Run production pipeline
+
+
+
+#### 4. Deploy model for inference
+This is similar to what we saw in [part one](https://github.com/jacheung/thin-ML-deployment) of this series. 
+
+Deploy endpoint: 
+``` 
+cd production-ML-deployment  
+uvicorn app.api:route   
+```
+
+Test FastAPI endpoint via curl:
+``` 
+curl \  
+-F "file=@<test_image_file_path>" \  
+http://127.0.0.1:8000/predict  
+```
+
+Test FastAPI endpoint via python:
+```
+#Python
+url = "http://127.0.0.1:8000/predict"
+filename = f'<test_image_file_path>'
+file = {'file': open(filename, 'rb'}
+resp = requests.post(url=url, files=file)
+```
