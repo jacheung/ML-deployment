@@ -6,7 +6,10 @@
  &nbsp; b. MLflow - experiment tracking and model registry
 
 ## Background
-Architecture...
+We'll be performing transfer learning on the MNIST dataset to demo the tools used in this production level workflow. The architecture diagram below will provide a high level view of what we'll be building. 
+![](/docs/architecture-production.jpg)
+Note: This architecture is easily translateable to any ML project. 
+
 #### 1. Training and Production pipelines
 On the road to a production level deployment, we define two types of pipelines: training and production. At the front end of the ML workflow (e.g. data cleaning and feature engineering) they remain the same for both. The main difference is that training pipelines will do a 70/30 split (or whatever split you'd like) of the data for searching optimal hyperparameters, whereas production pipelines will load the optimal hyperparameters and use 100% of the data to build and register the model for inference. Inference will be done using FastAPI, as seen in our part 1. 
 ![](/docs/training-production.jpg)
