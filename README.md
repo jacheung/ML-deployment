@@ -7,7 +7,7 @@
 
 ## Background
 We'll be performing transfer learning on the MNIST dataset to demo the tools used in this production level workflow. The architecture diagram below will provide a high level view of what we'll be building. 
-![](/docs/architecture-production.jpg)
+![](/docs/architecture-production.png)
 Note: This architecture is easily translateable to any ML project. 
 
 #### 1. Training and Production pipelines
