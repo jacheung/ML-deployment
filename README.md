@@ -5,6 +5,8 @@
  &nbsp; a. Optuna - parallelized Bayesian hyperparameter search  
  &nbsp; b. MLflow - experiment tracking and model registry
 
+![](/docs/vision-production.png) 
+
 ## Background
 We'll be performing transfer learning on the MNIST dataset to demo the tools used in this production level workflow. The architecture diagram below will provide a high level view of what we'll be building. 
 ![](/docs/architecture-production.png)
