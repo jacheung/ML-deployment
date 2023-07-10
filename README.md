@@ -66,7 +66,7 @@ Following best practices, instantiate a new virtual environment and install the 
 python -m venv <venv/path/>
 source <venv/path>/bin/activate
 cd production-ML-deployment
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 Run the training pipeline, putting in an experiment-name. This name will be used for both Optuna and MLflow. You should also see an MLflow experiment name with this filled out value in your MLflow UI. 
