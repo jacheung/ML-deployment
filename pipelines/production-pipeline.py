@@ -23,7 +23,8 @@ if __name__ == "__main__":
     experiment_name = args.experiment_name
 
     # preprocess and define batch sizes for tensorflow 
-    ds_train = load.load_tensorflow_dataset_production('mnist')
+    ds_train = load.load_tensorflow_dataset(dataset_str='mnist',
+                                             train_test_split=False)
     ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, 
                             num_parallel_calls=tf.data.AUTOTUNE)
     ds_train = ds_train.batch(128)

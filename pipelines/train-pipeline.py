@@ -72,11 +72,13 @@ if __name__ == "__main__":
     mlflow_kwargs = {'experiment_id': experiment_id}
 
     # preprocess and define batch sizes for tensorflow 
-    ds_train, ds_test = load.load_tensorflow_dataset_training('mnist')
-    ds_train = ds_train.map(preprocess.preprocess_mnist_tfds, 
+    data = load.load_tensorflow_dataset(dataset_str='mnist',
+                                             train_test_split=True)
+    
+    ds_train = data[0].map(preprocess.preprocess_mnist_tfds, 
                             num_parallel_calls=tf.data.AUTOTUNE)
     ds_train = ds_train.batch(128)
-    ds_test = ds_test.map(preprocess.preprocess_mnist_tfds, 
+    ds_test = data[1].map(preprocess.preprocess_mnist_tfds, 
                           num_parallel_calls=tf.data.AUTOTUNE)
     ds_test = ds_test.batch(128) 
 
