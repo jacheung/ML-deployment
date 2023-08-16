@@ -69,9 +69,6 @@ if __name__ == "__main__":
         # MLFlow tracking artifact (e.g. model file)
         # this will log the model and all its details under run_id/artifacts
         # ths will also register the model so it can be served
-        # mlflow.pyfunc.log_model(python_model=mnist_model,
-        #                         artifact_path="",
-        #                         registered_model_name=experiment_name)
         mlflow.tensorflow.log_model(mnist_model._model,
                                 artifact_path="",
                                 registered_model_name=experiment_name)
