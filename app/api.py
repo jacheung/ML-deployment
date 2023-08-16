@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, UploadFile
 import tensorflow as tf
 import mlflow
 # project imports
-from steps.preprocess_step import preprocess_mnist_tfds
+from steps.preprocess_step import preprocess
 
 
 load_dotenv()
@@ -26,17 +26,26 @@ async def predict(file: UploadFile = File(...)):
     await file.read()
     image = np.array(Image.open(file.file))
 
-    # load model
-    results = mlflow.search_registered_models(
-        filter_string='name = "mnist-hyperparam-local"')
-    latest_model_details = results[0].latest_versions[0]
-    model = mlflow.pyfunc.load_model(
-        model_uri=f'{latest_model_details.source}')
+    # load model from mlflow
+    try: 
+        results = mlflow.search_registered_models(
+            filter_string='name = "mnist-hyperparam-local"')
+        latest_model_details = results[0].latest_versions[0]
+        model = mlflow.tensorflow.load_model(
+            model_uri=f'{latest_model_details.source}')
+        print(f'Successfully loaded model from {latest_model_details.source}')
+    except IndexError:
+        print('No models found. Cannot perform inference.')
+        return None
 
-    # predict
-    image, _ = preprocess_mnist_tfds(image)
+    # preprocess image and predict
+    image, _ = preprocess.preprocess_mnist_tfds(image)
     image = tf.reshape(image, [1, 224, 224, 3])
     result = model.predict(image).argmax()
+
+    # process output 
+    result = PredictResponse(prediction=result.tolist())
+    print(result)
 
     return result
 

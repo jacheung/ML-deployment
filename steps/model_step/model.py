@@ -1,9 +1,6 @@
 import tensorflow as tf
 import tensorflow_hub as hub
 import mlflow
-import numpy as np
-# Project imports
-from steps.preprocess_step.preprocess import preprocess_mnist_tfds
 
 
 class MNIST(mlflow.pyfunc.PythonModel): 
@@ -13,7 +10,7 @@ class MNIST(mlflow.pyfunc.PythonModel):
         self.load()    
     @staticmethod
     def _build(self, hyperparameters):
-        ## Build model
+        # Build model
         # class names for mnist hardcoded
         class_names = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     
@@ -62,25 +59,3 @@ class MNIST(mlflow.pyfunc.PythonModel):
         self._train_history = self._model.fit(xy_train,
                                                epochs=hyperparameters['epochs'])
         
-    def load(self):
-        try:
-            results = mlflow.search_registered_models(
-                filter_string=f'name = "{self._mlflow_registered_model_name}"')
-            latest_model_details = results[0].latest_versions[0]
-            self._model = mlflow.pyfunc.load_model(
-                model_uri=f'{latest_model_details.source}')
-            print(f'Successfully loaded model from {latest_model_details.source}')
-        except IndexError:
-            print('No models found.')
-            self._model = None
-            return self
-        
-    def predict(self, context, model_input: np.ndarray) -> np.ndarray:
-        image, _ = preprocess_mnist_tfds(model_input)
-        image = tf.reshape(image, [1, 224, 224, 3])
-        return self._model.predict(image).argmax()
-
-
-def get_model():
-    model = MNIST()
-    return model
