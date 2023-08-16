@@ -3,7 +3,11 @@ from dotenv import load_dotenv
 from PIL import Image
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
-from steps.model_step.model import MNIST
+import tensorflow as tf
+import mlflow
+# project imports
+from steps.preprocess_step import preprocess_mnist_tfds
+
 
 load_dotenv()
 route = FastAPI()
@@ -22,13 +26,17 @@ async def predict(file: UploadFile = File(...)):
     await file.read()
     image = np.array(Image.open(file.file))
 
-    # load model and predict
-    mnist = MNIST(mlflow_registered_model_name='mnist-hyperparam-local')
-    if mnist._model is None:
-        return "No models found. Cannot parse request"
-    y_pred = mnist.predict(context=None, model_input=image)
-    result = PredictResponse(prediction=y_pred.tolist())
-    print(y_pred)
+    # load model
+    results = mlflow.search_registered_models(
+        filter_string='name = "mnist-hyperparam-local"')
+    latest_model_details = results[0].latest_versions[0]
+    model = mlflow.pyfunc.load_model(
+        model_uri=f'{latest_model_details.source}')
+
+    # predict
+    image, _ = preprocess_mnist_tfds(image)
+    image = tf.reshape(image, [1, 224, 224, 3])
+    result = model.predict(image).argmax()
 
     return result
 
