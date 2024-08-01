@@ -1,4 +1,4 @@
-# Production ML Deployment
+# ML Deployment
  This repository is part 2 of a series of templates for stepping up a POC deployment to one that is scalable in production. This part introduces:
  1. training pipeline and production pipelines
  2. two critical tools to complement the above pipelines:  
